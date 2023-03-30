@@ -7,6 +7,16 @@ project(':server') {
         implementation project(':common')
         implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
     }
+    mainClassName = 'server.Main'
+
+    jar {
+        manifest {
+            attributes "Main-Class": "$mainClassName"
+        }
+        from {
+            configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        }
+    }
 }
 project(':client') {
     apply plugin: 'application'
@@ -16,7 +26,16 @@ project(':client') {
     dependencies {
         implementation project(':common')
         implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+    }
+    mainClassName = 'client.Main'
 
+    jar {
+        manifest {
+            attributes "Main-Class": "$mainClassName"
+        }
+        from {
+            configurations.runtimeClasspath.collect { it.isDirectory() ? it : zipTree(it) }
+        }
     }
 }
 allprojects{

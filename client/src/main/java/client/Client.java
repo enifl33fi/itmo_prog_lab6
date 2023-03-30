@@ -54,12 +54,17 @@ public class Client {
             this.channel = newChannel;
             while (this.channel != null){
                 Response res = this.sendReqGetRes();
+                if (res == null){
+                    System.out.println("Server went into hibernation or programmers messed up again");
+                    System.exit(0);
+                }
                 System.out.println(res.getResponseLine());
                 if (res.isExit()){
                     System.exit(0);
                 }
             }
         } catch (IOException e) {
+            System.out.println(e.getMessage());
             System.out.println("fail");
         }
         System.out.println("Server went into hibernation or programmers messed up again");
