@@ -1,7 +1,14 @@
 package client;
 
+import commands.CommandType;
+import exceptions.NullFieldException;
+import exceptions.TimeLimitException;
+import exceptions.WrongCommandException;
+import exceptions.WrongFieldException;
 import inputWorkers.InputHandler;
-import network.Request;
+import inputWorkers.RequestParser;
+import managers.RequestManager;
+import network.requests.Request;
 import network.Response;
 import org.apache.commons.lang3.SerializationUtils;
 
@@ -9,17 +16,25 @@ import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
     private SocketChannel channel;
     private String host;
     private int port;
-    private final InputHandler inputHandler = new InputHandler();
+    private final InputHandler inputHandler;
+
+    private final RequestParser requestParser;
 
     private final int attemptsCount  = 30;
     private final int clientSleepTime = 20;
+
+
+    public Client(RequestManager requestManager, InputHandler inputHandler) {
+        this.requestParser = new RequestParser(requestManager);
+        this.inputHandler = inputHandler;
+
+    }
 
     private SocketChannel connect(String host, int port) throws IOException {
         SocketChannel openChannel = SocketChannel.open();
@@ -36,36 +51,60 @@ public class Client {
     }
     public void run(String host, int port){
         try (SocketChannel newChannel = this.connect(host, port)) {
-            if (newChannel != null){
-                this.channel = newChannel;
-            }
+            this.channel = newChannel;
             while (this.channel != null){
                 Response res = this.sendReqGetRes();
                 System.out.println(res.getResponseLine());
+                if (res.isExit()){
+                    System.exit(0);
+                }
             }
         } catch (IOException e) {
             System.out.println("fail");
         }
+        System.out.println("Server went into hibernation or programmers messed up again");
 
     }
 
     public Request getRequest(){
-        System.out.println("собираю реквест");
-        String lineArr = inputHandler.getLine();
-        Request req = new Request();
-        try{
-            req.setData(Arrays.stream(lineArr.split(" ")).mapToInt(Integer::parseInt).toArray());
-        } catch (Exception ignored){
-            System.out.println("Shitty data");
+        while (true){
+            System.out.println("собираю реквест");
+            String lineArr = this.inputHandler.getLine();
+            if (lineArr != null){
+                try{
+                    Request req =  this.requestParser.parse(lineArr, this.inputHandler.isFromFile());
+                    if (req.getCommandType() == CommandType.EXECUTE_SCRIPT){
+                        this.inputHandler.setFromFile(true);
+                        this.inputHandler.getCommands(req.getArg());
+                    } else {
+                        return req;
+                    }
+                }catch (WrongFieldException | NullFieldException | WrongCommandException e) {
+                    System.out.println(e.getMessage());
+                } catch (IllegalArgumentException e) {
+                    System.out.println(e.getMessage());
+                    System.out.println("Wrong argument");
+                } catch (NullPointerException | IndexOutOfBoundsException e) {
+                    System.out.println("Unknown command");
+                }
+            }
         }
-
-        return req;
     }
 
-    public void sendRequest(Request req) throws IOException {
+    public void sendRequest(Request req) throws IOException, InterruptedException {
         System.out.println("посылаю реквест");
+        int remainAttempts = this.attemptsCount;
         ByteBuffer bf = ByteBuffer.wrap(SerializationUtils.serialize(req));
-        this.channel.write(bf);
+        while (remainAttempts > 0){
+            int state = this.channel.write(bf);
+            if (state == -1){
+                remainAttempts--;
+                TimeUnit.MILLISECONDS.sleep(this.clientSleepTime);
+            }
+            else {
+                break;
+            }
+        }
     }
 
     public Response getResponse() throws IOException, InterruptedException {
@@ -79,6 +118,8 @@ public class Client {
             }
             else{
                 return SerializationUtils.deserialize(bf.array());
+
+
             }
         }
         return null;
@@ -91,9 +132,13 @@ public class Client {
             return this.getResponse();
         } catch (IOException e) {
             System.out.println("Failed to exchange data with server");
+            System.exit(0);
             this.channel = this.reconnect();
         } catch (InterruptedException e) {
             System.out.println("why");;
+        } catch (TimeLimitException e){
+            System.out.println(e.getMessage());
+            System.exit(0);
         }
         return null;
     }

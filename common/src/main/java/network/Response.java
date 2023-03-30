@@ -1,15 +1,30 @@
 package network;
 
+import commands.CommandType;
+
 import java.io.Serializable;
 import java.util.Arrays;
 
 public class Response implements Serializable {
+    private CommandType commandType;
     private String responseLine;
-    private int[] data;
 
+    private boolean isExit;
+
+    public Response(String responseLine){
+        this.responseLine = responseLine;
+        this.isExit = false;
+    }
+
+    public CommandType getCommandType() {
+        return this.commandType;
+    }
+
+    public void setCommandType(CommandType commandType) {
+        this.commandType = commandType;
+    }
 
     public String getResponseLine() {
-
         return responseLine;
     }
 
@@ -17,12 +32,11 @@ public class Response implements Serializable {
         this.responseLine = responseLine;
     }
 
-    public int[] getData() {
-        return data;
+    public boolean isExit() {
+        return this.isExit;
     }
 
-    public void setData(int[] data) {
-        this.data = data;
+    public void setExit(boolean exit) {
+        this.isExit = exit;
     }
-
 }

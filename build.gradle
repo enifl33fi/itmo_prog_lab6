@@ -1,19 +1,40 @@
-plugins {
-    id 'java'
+project(':server') {
+    apply plugin: 'application'
+    application {
+        mainClass = 'server.Main'
+    }
+    dependencies {
+        implementation project(':common')
+        implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+    }
 }
+project(':client') {
+    apply plugin: 'application'
+    application {
+        mainClass = 'client.Main'
+    }
+    dependencies {
+        implementation project(':common')
+        implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
 
-group 'org.example'
-version '1.0-SNAPSHOT'
-
-repositories {
-    mavenCentral()
+    }
 }
+allprojects{
+    apply plugin: 'java'
 
-dependencies {
-    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
-    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
-}
+    group 'ru.ifmo.se'
+    version '1.0.0'
 
-test {
-    useJUnitPlatform()
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        testImplementation 'org.junit.jupiter:junit-jupiter-api:5.8.1'
+        testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.8.1'
+    }
+
+    test {
+        useJUnitPlatform()
+    }
 }

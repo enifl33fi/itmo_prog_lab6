@@ -6,18 +6,22 @@ import java.net.ServerSocket;
 
 import java.net.Socket;
 import java.net.SocketException;
-import java.util.Arrays;
 
-import network.Request;
+import commands.CommandType;
+import managers.CommandManager;
+import network.requests.Request;
 import network.Response;
 
 public class CollectionServer {
-    
+
     private final int port;
+    private final CommandManager commandManager;
     private final ShittyServerSocketChannel servChannel = new ShittyServerSocketChannel();
 
-    public CollectionServer(int port){
+
+    public CollectionServer(int port, CommandManager commandManager){
         this.port = port;
+        this.commandManager = commandManager;
     }
 
     public void run(){
@@ -36,6 +40,10 @@ public class CollectionServer {
                         System.out.println("Unable to close client: " + e.getMessage());
                     }
                 }
+                if (this.servChannel.getToDelete().size() > 0){
+                    this.servChannel.removeAll(this.servChannel.getToDelete());
+                    this.servChannel.getToDelete().clear();
+                }
             }
 
         } catch (IOException e) {
@@ -46,17 +54,7 @@ public class CollectionServer {
 
     }
     public Response getResponse(Request req){
-        Response res = new Response();
-        if (!req.hasData()){
-            res.setResponseLine("Don't have required data.");
-        }else {
-            int[] ans = req.getData();
-            res.setResponseLine("Got array: " + Arrays.toString(ans));
-            for (int i = 0; i < ans.length; i++){
-                ans[i] *= 2;
-            }
-            res.setData(ans);
-        }
+        Response res = this.commandManager.getCommand(req.getCommandType()).execute(req);
         return res;
     }
 
@@ -66,6 +64,10 @@ public class CollectionServer {
             if (req != null){
                 Response res = this.getResponse(req);
                 this.servChannel.sendResponse(client, res);
+                if (res.getCommandType() == CommandType.EXIT){
+                    client.close();
+                    this.servChannel.getToDelete().add(client);
+                }
             }
 
 

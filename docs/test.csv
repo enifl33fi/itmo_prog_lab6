@@ -1,0 +1,4 @@
+name,x,y,health,heartCount,category,meleeWeapon,chapterName,marinesCount,id,creationDate
+vasily,123,321,,3,TERMINATOR,,15000,1000,1678921015068,Thu Mar 16 01:56:55 MSK 2023
+ivan,2,2,2.0,2,LIBRARIAN,CHAIN_AXE,2,2,1678921038304,Thu Mar 16 01:57:18 MSK 2023
+empty,1,2,,1,,,xz,15,1678921067600,Thu Mar 16 01:57:47 MSK 2023
