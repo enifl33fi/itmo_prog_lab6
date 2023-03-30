@@ -1,6 +1,7 @@
 package collection;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 import element.AstartesCategory;
 import element.CollectionPart;
@@ -49,28 +50,22 @@ public class SpaceMarineCollection implements InteractiveCollection {
     @Override
     public String show() {
         StringBuilder answer = new StringBuilder();
-        for (CollectionPart curElem : this.data) {
-            answer.append(curElem);
-        }
+        this.data.stream().forEach(answer::append);
         return answer.toString();
     }
 
     @Override
     public String update(long id, CollectionPart elem) {
-        int i = 0;
-        String answer = null;
-        for (CollectionPart curElem : this.data) {
-            if (curElem.getId() == id) {
-                this.set(curElem, elem);
-                answer = String.format("Element with id %d updated successfully", id);
-                break;
-            }
-            if (i == this.data.size() - 1) {
-                answer = "No such id.";
-            }
-            i++;
+        if (this.data.size() == 0) {
+            return "Collection is empty";
         }
-        return answer;
+        Stream<CollectionPart> subStream = this.data.stream().filter((CollectionPart curElem) -> curElem.getId() == id);
+        CollectionPart curElem = subStream.reduce((a, b) -> b).orElse(null);
+        if (curElem == null){
+            return "No such id.";
+        }
+        this.set(curElem, elem);
+        return String.format("Element with id %d updated.%n", id);
     }
 
     @Override
@@ -78,20 +73,15 @@ public class SpaceMarineCollection implements InteractiveCollection {
         int i = 0;
         String answer = null;
         if (this.data.size() == 0) {
-            answer = "Collection is empty";
+            return  "Collection is empty";
         }
-        for (CollectionPart curElem : this.data) {
-            if (curElem.getId() == id) {
-                answer = String.format("Element with id %d deleted.%n", curElem.getId());
-                this.data.remove(i);
-                break;
-            }
-            if (i == this.data.size() - 1) {
-                answer = "No such id.";
-            }
-            i++;
+        Stream<CollectionPart> subStream = this.data.stream().filter((CollectionPart curElem) -> curElem.getId() == id);
+        CollectionPart curElem = subStream.reduce((a, b) -> b).orElse(null);
+        if (curElem == null){
+            return "No such id.";
         }
-        return answer;
+        this.data.remove(i);
+        return String.format("Element with id %d deleted.%n", id);
     }
 
     @Override
@@ -125,6 +115,7 @@ public class SpaceMarineCollection implements InteractiveCollection {
         StringBuilder answer = new StringBuilder();
         Iterator<CollectionPart> iterator = this.data.iterator();
         CollectionPart curElem;
+
         while (iterator.hasNext()) {
             curElem = iterator.next();
             if (elem.compareTo(curElem) > 0) {
@@ -140,23 +131,22 @@ public class SpaceMarineCollection implements InteractiveCollection {
 
     @Override
     public int countByCategory(AstartesCategory category) {
-        int counter = 0;
-        for (CollectionPart curElem : this.data) {
+        return (int) this.data.stream()
+                .filter((CollectionPart curElem) -> Objects.equals(curElem.getCategory(), category))
+                .count();
 
-            if (Objects.equals(curElem.getCategory(), category)) {
-                counter++;
-            }
-        }
-        return counter;
     }
 
     @Override
     public String filterContainsName(String namePart) {
+
         StringBuilder answer = new StringBuilder();
-        for (CollectionPart curElem : this.data) {
-            if (curElem.getName().contains(namePart)) {
-                answer.append(curElem);
-            }
+        this.data.stream()
+                .filter((CollectionPart curElem) -> curElem.getName().contains(namePart))
+                .forEach(answer::append);
+
+        if (answer.length() == 0){
+            answer.append("Where is no such elements").append("\n");
         }
         return answer.toString();
     }
@@ -164,13 +154,9 @@ public class SpaceMarineCollection implements InteractiveCollection {
     @Override
     public String printFieldAscendingHeartCount() {
         StringBuilder answer = new StringBuilder();
-        List<Integer> heartCounts = new ArrayList<>();
-        for (CollectionPart curElem : this.data) {
-            heartCounts.add(curElem.getHeartCount());
-        }
-        Collections.sort(heartCounts);
-        for (Integer heartCount : heartCounts) {
-            answer.append(heartCount).append("\n");
+        this.data.stream().map(CollectionPart::getHeartCount).sorted().forEach(heartCount -> answer.append(heartCount).append("\n"));
+        if (answer.length() == 0){
+            answer.append("Collection is empty").append("\n");
         }
         return answer.toString();
     }
