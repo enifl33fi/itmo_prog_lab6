@@ -6,6 +6,7 @@ project(':server') {
     dependencies {
         implementation project(':common')
         implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
     }
     mainClassName = 'server.Main'
 
@@ -26,6 +27,7 @@ project(':client') {
     dependencies {
         implementation project(':common')
         implementation group: 'org.apache.commons', name: 'commons-lang3', version: '3.12.0'
+
     }
     mainClassName = 'client.Main'
 

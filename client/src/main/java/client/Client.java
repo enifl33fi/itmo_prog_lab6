@@ -36,31 +36,35 @@ public class Client {
 
     }
 
-    private SocketChannel connect(String host, int port) throws IOException {
-        SocketChannel openChannel = SocketChannel.open();
-        InetSocketAddress address = new InetSocketAddress(host, port);
-        if (!address.isUnresolved()){
-            openChannel.connect(address);
-            System.out.printf("Connected with server: host: %s port: %d%n", host, port);
-            openChannel.configureBlocking(false);
-            this.host = host;
-            this.port = port;
-            return openChannel;
+    private SocketChannel connect(String host, int port){
+        while (true){
+            try {
+                SocketChannel openChannel = SocketChannel.open();
+                InetSocketAddress address = new InetSocketAddress(host, port);
+                if (!address.isUnresolved()) {
+                    openChannel.connect(address);
+                    System.out.printf("Connected with server: host: %s port: %d%n", host, port);
+                    openChannel.configureBlocking(false);
+                    this.host = host;
+                    this.port = port;
+                    return openChannel;
+                }
+            } catch (IOException ignored){
+
+            }
         }
-        return null;
+
     }
     public void run(String host, int port){
         try (SocketChannel newChannel = this.connect(host, port)) {
             this.channel = newChannel;
             while (this.channel != null){
                 Response res = this.sendReqGetRes();
-                if (res == null){
-                    System.out.println("Server went into hibernation or programmers messed up again");
-                    System.exit(0);
-                }
-                System.out.println(res.getResponseLine());
-                if (res.isExit()){
-                    System.exit(0);
+                if (res != null){
+                    System.out.println(res.getResponseLine());
+                    if (res.isExit()){
+                        System.exit(0);
+                    }
                 }
             }
         } catch (IOException e) {
@@ -73,7 +77,6 @@ public class Client {
 
     public Request getRequest(){
         while (true){
-            System.out.println("собираю реквест");
             String lineArr = this.inputHandler.getLine();
             if (lineArr != null){
                 try{
@@ -97,7 +100,6 @@ public class Client {
     }
 
     public void sendRequest(Request req) throws IOException, InterruptedException {
-        System.out.println("посылаю реквест");
         int remainAttempts = this.attemptsCount;
         ByteBuffer bf = ByteBuffer.wrap(SerializationUtils.serialize(req));
         while (remainAttempts > 0){
@@ -109,6 +111,9 @@ public class Client {
             else {
                 break;
             }
+        }
+        if (remainAttempts <= 0){
+            throw new TimeLimitException();
         }
     }
 
@@ -127,7 +132,7 @@ public class Client {
 
             }
         }
-        return null;
+        throw new TimeLimitException();
     }
 
     public Response sendReqGetRes(){
@@ -137,23 +142,19 @@ public class Client {
             return this.getResponse();
         } catch (IOException e) {
             System.out.println("Failed to exchange data with server");
-            System.exit(0);
             this.channel = this.reconnect();
         } catch (InterruptedException e) {
-            System.out.println("why");;
+            System.out.println("why");
         } catch (TimeLimitException e){
             System.out.println(e.getMessage());
-            System.exit(0);
+            this.channel = this.reconnect();
         }
         return null;
     }
 
     public SocketChannel reconnect(){
-        try{
-            return this.connect(this.host, this.port);
-        } catch (IOException e) {
-            return null;
-        }
+        return this.connect(this.host, this.port);
+
     }
 
 }
