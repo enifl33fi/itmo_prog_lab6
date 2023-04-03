@@ -2,6 +2,8 @@ package fileWorkers;
 
 import general.GeneralVars;
 import collection.InteractiveCollection;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedWriter;
 import java.io.FileNotFoundException;
@@ -15,10 +17,8 @@ import java.util.List;
  * @version 1.0
  */
 public class WriterCSV {
-    /**
-     * Saves given collection's elements to CSV file.
-     * @param curCol given collection. {@link collection.InteractiveCollection}
-     */
+    private final static Logger LOGGER = LogManager.getLogger(WriterCSV.class);
+
     public void save(InteractiveCollection curCol) {
         try (BufferedWriter writter =
                      new BufferedWriter(new FileWriter(GeneralVars.saveFileName, false))) {
@@ -27,16 +27,15 @@ public class WriterCSV {
             for (String saveLine : saveLines) {
                 writter.write(saveLine + "\n");
             }
-            System.out.println("Collection saved successfully");
+            LOGGER.info("Collection saved successfully");
         } catch (FileNotFoundException | SecurityException | NullPointerException e) {
-            System.out.println(e.getMessage());
-            System.out.println("Couldn't find given file. It's impossible to save.");
+            LOGGER.error(e.getMessage());
+            LOGGER.error("Couldn't find given file. It's impossible to save.");
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.out.println("Some content might be lost.");
+            LOGGER.error(e.getMessage());
+            LOGGER.error("Some content might be lost.");
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            LOGGER.fatal(e.getMessage());
             System.out.println("Unreachable block. Just in case.");
         }
     }

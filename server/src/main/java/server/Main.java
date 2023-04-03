@@ -6,8 +6,15 @@ import managers.CommandLoader;
 import managers.ObjectsKeeper;
 import managers.CommandManager;
 
-public class Main {
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
+public class Main {
+    static{
+        Date date = new Date();
+        SimpleDateFormat simpleDF = new SimpleDateFormat("/yyyy-MM-dd/HH-mm-ss");
+        System.setProperty("log.fileName", "./logs" + simpleDF.format(date) + ".log");
+    }
 
     public static void main(String[] args) {
         CollectionGenerator collectionGenerator = new CollectionGenerator();

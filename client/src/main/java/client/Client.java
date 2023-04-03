@@ -11,6 +11,8 @@ import managers.RequestManager;
 import network.requests.Request;
 import network.Response;
 import org.apache.commons.lang3.SerializationUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
@@ -19,6 +21,7 @@ import java.nio.channels.SocketChannel;
 import java.util.concurrent.TimeUnit;
 
 public class Client {
+    private static final Logger LOGGER= LogManager.getLogger(Client.class);
     private SocketChannel channel;
     private String host;
     private int port;
@@ -43,7 +46,7 @@ public class Client {
                 InetSocketAddress address = new InetSocketAddress(host, port);
                 if (!address.isUnresolved()) {
                     openChannel.connect(address);
-                    System.out.printf("Connected with server: host: %s port: %d%n", host, port);
+                    LOGGER.info(String.format("Connected with server: host: %s port: %d%n", host, port));
                     openChannel.configureBlocking(false);
                     this.host = host;
                     this.port = port;
@@ -68,10 +71,9 @@ public class Client {
                 }
             }
         } catch (IOException e) {
-            System.out.println(e.getMessage());
-            System.out.println("fail");
+            LOGGER.fatal(e.getMessage());
+            LOGGER.fatal("Server went into hibernation or programmers messed up again");
         }
-        System.out.println("Server went into hibernation or programmers messed up again");
 
     }
 
@@ -88,12 +90,12 @@ public class Client {
                         return req;
                     }
                 }catch (WrongFieldException | NullFieldException | WrongCommandException e) {
-                    System.out.println(e.getMessage());
+                    LOGGER.error(e.getMessage());
                 } catch (IllegalArgumentException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("Wrong argument");
+                    LOGGER.error(e.getMessage());
+                    LOGGER.error("Wrong argument");
                 } catch (NullPointerException | IndexOutOfBoundsException e) {
-                    System.out.println("Unknown command");
+                    LOGGER.error("Unknown command");
                 }
             }
         }
@@ -141,12 +143,12 @@ public class Client {
             this.sendRequest(req);
             return this.getResponse();
         } catch (IOException e) {
-            System.out.println("Failed to exchange data with server");
+            LOGGER.error("Failed to exchange data with server");
             this.channel = this.reconnect();
         } catch (InterruptedException e) {
-            System.out.println("why");
+            LOGGER.error(e.getMessage());
         } catch (TimeLimitException e){
-            System.out.println(e.getMessage());
+            LOGGER.error(e.getMessage());
             this.channel = this.reconnect();
         }
         return null;

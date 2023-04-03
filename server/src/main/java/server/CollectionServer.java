@@ -15,6 +15,8 @@ import fileWorkers.WriterCSV;
 import managers.CommandManager;
 import network.requests.Request;
 import network.Response;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public class CollectionServer {
 
@@ -23,6 +25,8 @@ public class CollectionServer {
     private final ShittyServerSocketChannel servChannel = new ShittyServerSocketChannel();
     private final WriterCSV writerCSV = new WriterCSV();
     private final InteractiveCollection curCol;
+
+    private static final Logger LOGGER = LogManager.getLogger(CollectionServer.class);
 
 
     public CollectionServer(int port, CommandManager commandManager, InteractiveCollection curCol){
@@ -49,13 +53,13 @@ public class CollectionServer {
                     try {
                         this.servChannel.acceptClient();
                     }catch (IOException e){
-                        System.out.println("error while accepting client");
+                        LOGGER.error("error while accepting client: " + e.getMessage());
                     }
                     for (Socket curClient: servChannel.getClients()){
                         try {
                             this.getReqSendRes(curClient);
                         } catch (IOException e){
-                            System.out.println("Unable to close client: " + e.getMessage());
+                            LOGGER.error("Unable to close client: " + e.getMessage());
                         }
                     }
                     if (this.servChannel.getToDelete().size() > 0){
@@ -65,10 +69,11 @@ public class CollectionServer {
                 }
 
             } catch (IOException e) {
-                System.out.println("can't create server");
-                System.out.println(e.getMessage());
-                e.printStackTrace();
+                LOGGER.error("can't create server: " + e.getMessage());
             }
+        } catch (NoSuchElementException e){
+            LOGGER.fatal("Bad input: "+ e.getMessage());
+            System.exit(0);
         }
 
 
@@ -94,11 +99,11 @@ public class CollectionServer {
         } catch (SocketException e){
             client.close();
             this.servChannel.removeClient(client);
-            System.out.println("Problems in client: " + e.getMessage());
+            LOGGER.warn("Problems in client: " + e.getMessage());
         }catch (IOException e){
             client.close();
             this.servChannel.removeClient(client);
-            System.out.println("Unexpected error while reading");
+            LOGGER.error("Unexpected error while reading: " + e.getMessage());
         }
     }
 

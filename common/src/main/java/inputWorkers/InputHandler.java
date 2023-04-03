@@ -87,9 +87,11 @@ public class InputHandler {
 
     public String[] readElem() {
         String[] elemParts = new String[GeneralVars.VAR_COUNT - 2];
+        int curSize = this.curCommands.peek().size();
         for (int i = 0; i < GeneralVars.VAR_COUNT - 2; i++) {
-            if (this.fromFile){
+            if (this.fromFile && curSize > 0){
                 elemParts[i] = this.getLine();
+                curSize--;
             }
             else {
                 elemParts[i] = "";

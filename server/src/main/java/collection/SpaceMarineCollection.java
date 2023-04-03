@@ -154,7 +154,15 @@ public class SpaceMarineCollection implements InteractiveCollection {
     @Override
     public String printFieldAscendingHeartCount() {
         StringBuilder answer = new StringBuilder();
-        this.data.stream().map(CollectionPart::getHeartCount).sorted().forEach(heartCount -> answer.append(heartCount).append("\n"));
+        int sum = this.data.stream()
+                .map(CollectionPart::getHeartCount)
+                .reduce(0, Integer::sum);
+        System.out.println(sum);
+        
+        this.data.stream()
+                .map(CollectionPart::getHeartCount)
+                .sorted()
+                .forEach(heartCount -> answer.append(heartCount).append("\n"));
         if (answer.length() == 0){
             answer.append("Collection is empty").append("\n");
         }
@@ -180,4 +188,5 @@ public class SpaceMarineCollection implements InteractiveCollection {
         updElem.setMeleeWeapon(elem.getMeleeWeapon());
         updElem.setChapter(elem.getChapter());
     }
+
 }

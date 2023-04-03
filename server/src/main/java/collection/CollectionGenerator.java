@@ -8,6 +8,8 @@ import exceptions.NotEnoughFieldsException;
 import exceptions.NullFieldException;
 import exceptions.WrongFieldException;
 import fileWorkers.ReaderFiles;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -27,6 +29,7 @@ public class CollectionGenerator {
      * simplifies reading. {@link fileWorkers.ReaderFiles}
      */
     private final ReaderFiles reader = new ReaderFiles();
+    private static final Logger LOGGER = LogManager.getLogger(CollectionGenerator.class);
 
 
     /**
@@ -48,8 +51,7 @@ public class CollectionGenerator {
                         throw new NotEnoughFieldsException("line number " + i + " don't have enough fields");
                     }
                 } catch (NotEnoughFieldsException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("The whole line number " + i + " will be lost. Sorry <(。_。)>");
+                    LOGGER.warn("The whole line number " + i + " will be lost. Reason: "+ e.getMessage());
                     continue;
                 }
                 try {
@@ -61,32 +63,27 @@ public class CollectionGenerator {
                     ids.add(spaceMarine.getId());
 
                 } catch (ParseException e) {
-                    System.out.println(
+
+                    LOGGER.warn("The whole line number " + i + " will be lost. Reason: \n" +
                             "Not correct pattern for data.\nCorrect pattern: EEE MMM dd kk:mm:ss z yyyy.");
-                    System.out.println("The whole line number " + i + " will be lost. Sorry <(。_。)>");
                 } catch (NumberFormatException e) {
                     ;
-                    System.out.println("One of number-format fields was empty or string");
-                    System.out.println("The whole line number " + i + " will be lost. Sorry <(。_。)>");
+                    LOGGER.warn("The whole line number " + i + " will be lost.Reason: \n" +
+                            "One of number-format fields was empty or string");
                 } catch (WrongFieldException | NullFieldException | IdCollapseException e) {
-                    System.out.println(e.getMessage());
-                    System.out.println("The whole line number " + i + " will be lost. Sorry <(。_。)>");
+                    LOGGER.warn("The whole line number " + i + " will be lost. Reason: "+ e.getMessage());
                 } catch (Exception e) {
-                    System.out.println(e.getMessage());
-                    e.printStackTrace();
+                    LOGGER.fatal(e.getMessage());
                     System.out.println("Unreachable block. Just in case.");
                 }
                 line = this.reader.getLine(inputStream);
             }
         } catch (SecurityException | IOException | NullPointerException e) {
-            System.out.println(e.getMessage());
-            System.out.println("Couldn't find given file. It's impossible to read.");
-            System.out.println("It could be impossible to save.");
+            LOGGER.error("Couldn't find given file. It's impossible to read. Reason: " + e.getMessage());
         } catch (Exception e) {
-            System.out.println(e.getMessage());
-            e.printStackTrace();
+            LOGGER.fatal(e.getMessage());
             System.out.println("Unreachable block. Just in case.");
         }
-        System.out.println("Collection read successfully");
+        LOGGER.info("Collection read successfully");
     }
 }
